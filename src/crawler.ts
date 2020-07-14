@@ -8,18 +8,11 @@ import * as normalizeUrl from "normalize-url";
 let crawledPages: T.CrawledPageData[] = [];
 let urlsToVisit: URL[] = [];
 let pagesVisited = 0;
+let currentUrl: URL = null;
 
-if (!fs.existsSync(_.DIR_OUTPUT)) {
-  fs.mkdirSync(_.DIR_OUTPUT);
-}
+// append csv headers
+fs.appendFileSync(_.OUTPUT_PATH, `url,status\n`);
 
-if (fs.existsSync(_.FULL_FILE_PATH)) {
-  fs.unlinkSync(_.FULL_FILE_PATH);
-}
-
-fs.appendFileSync(_.FULL_FILE_PATH, `url,status\n`);
-
-let currentUrl = new URL(_.START_URL.toString());
 urlsToVisit.push(_.START_URL);
 crawl();
 
@@ -31,9 +24,7 @@ function crawl() {
   }
 
   const nextUrl = urlsToVisit.pop();
-
   currentUrl = nextUrl;
-  console.log("######", currentUrl.origin);
 
   // reached end of links
   if (nextUrl === undefined) {
@@ -41,6 +32,7 @@ function crawl() {
     return;
   }
 
+  // don't visit if already visited
   if (crawledPages.some((e) => e.url.href === nextUrl.href)) {
     crawl();
     return;
@@ -63,26 +55,20 @@ function visitPage(url: URL, callback: Function) {
     console.log(`Status code: ${res.statusCode}`);
 
     crawledPages.push({ url: url, status: res.statusCode });
-    fs.appendFileSync(_.FULL_FILE_PATH, `${url},${res.statusCode}\n`);
+    fs.appendFileSync(_.OUTPUT_PATH, `${url},${res.statusCode}\n`);
     pagesVisited++;
 
     if (res.statusCode !== 200) {
       callback();
       return;
     }
-    let $ = cheerio.load(body);
-
+    const $ = cheerio.load(body);
     collectLinks($);
     callback();
   });
 }
 
 function collectLinks($: CheerioStatic) {
-  const test = $("a[href^='/']");
-  test.each(function () {
-    console.log($(this).attr("href"));
-  });
-
   const relativeLinks = $("a[href^='/']");
   const absoluteLinks = $("a[href^='http']");
 
@@ -112,4 +98,5 @@ function collectLinks($: CheerioStatic) {
 function endReport() {
   console.log();
   console.log(`Pages visited ${pagesVisited}`);
+  console.timeEnd();
 }
