@@ -4,7 +4,8 @@
   "description": "",
   "main": "crawler.js",
   "scripts": {
-    "start": "ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts",
+    "clean": "ts-node ./utilities/clean.ts"
   },
   "keywords": [],
   "author": "",

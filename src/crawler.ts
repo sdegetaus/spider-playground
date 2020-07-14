@@ -5,13 +5,15 @@ import * as request from "request";
 import * as cheerio from "cheerio";
 import * as normalizeUrl from "normalize-url";
 
+let level = 0;
 let crawledPages: T.CrawledPageData[] = [];
 let urlsToVisit: URL[] = [];
+let emailsFound: T.Email[] = [];
 let pagesVisited = 0;
 let currentUrl: URL = null;
 
 // append csv headers
-fs.appendFileSync(_.OUTPUT_PATH, `url,status\n`);
+fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
 
 urlsToVisit.push(_.START_URL);
 crawl();
@@ -54,14 +56,15 @@ function visitPage(url: URL, callback: Function) {
 
     console.log(`Status code: ${res.statusCode}`);
 
-    crawledPages.push({ url: url, status: res.statusCode });
-    fs.appendFileSync(_.OUTPUT_PATH, `${url},${res.statusCode}\n`);
-    pagesVisited++;
-
     if (res.statusCode !== 200) {
       callback();
       return;
     }
+
+    crawledPages.push({ url: url, status: res.statusCode });
+    fs.appendFileSync(_.PATH_PAGES_DB, `${url},${res.statusCode}\n`);
+    pagesVisited++;
+
     const $ = cheerio.load(body);
     collectLinks($);
     callback();
@@ -88,6 +91,19 @@ function collectLinks($: CheerioStatic) {
 
     // dont include urls with params
     if (url.search.length !== 0) {
+      return true;
+    }
+
+    // an email was found!
+    if (href.includes("mailto:")) {
+      const address = href.replace("mailto:", "").toLowerCase();
+      // don't push already created emails
+      if (!emailsFound.some((email) => email.address === address)) {
+        emailsFound.push({
+          address,
+        });
+        fs.appendFileSync(_.PATH_EMAILS_DB, `${address}\n`);
+      }
       return true;
     }
 
