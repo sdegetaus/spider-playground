@@ -23,7 +23,7 @@ function crawl() {
     return;
   }
 
-  const nextUrl = urlsToVisit.pop();
+  const nextUrl = urlsToVisit.shift();
   currentUrl = nextUrl;
 
   // reached end of links
@@ -33,7 +33,7 @@ function crawl() {
   }
 
   // don't visit if already visited
-  if (crawledPages.some((e) => e.url.href === nextUrl.href)) {
+  if (crawledPages.some((e) => e.url.pathname === nextUrl.pathname)) {
     crawl();
     return;
   }
@@ -69,27 +69,34 @@ function visitPage(url: URL, callback: Function) {
 }
 
 function collectLinks($: CheerioStatic) {
-  const relativeLinks = $("a[href^='/']");
-  const absoluteLinks = $("a[href^='http']");
+  const allLinks = $("a[href]");
 
-  console.log(`Found ${relativeLinks.length} relative links on page`);
-  console.log(`Found ${absoluteLinks.length} absolute links on page`);
+  allLinks.each(function () {
+    const href = $(this).attr("href").trim();
+    const isAbsolute = new RegExp("^(?:[a-z]+:)?//", "i").test(href);
 
-  relativeLinks.each(function () {
-    urlsToVisit.push(
-      new URL(
-        normalizeUrl(
-          `${currentUrl.protocol}//${currentUrl.hostname}${$(this).attr(
-            "href"
-          )}`
-        )
-      )
-    );
-  });
+    // dont include hrefs with 'tel:', 'javascript:', etc.
+    if (_.INVALID_HREFS.some((invalid) => href.includes(invalid))) {
+      return true;
+    }
 
-  absoluteLinks.each(function () {
-    const url = new URL(normalizeUrl(`${$(this).attr("href")}`));
-    if (!_.EXCLUDED_ORIGINS.some((regex) => regex.test(url.origin))) {
+    const url = isAbsolute
+      ? new URL(normalizeUrl(`${href}`))
+      : new URL(
+          normalizeUrl(`${currentUrl.protocol}//${currentUrl.hostname}${href}`)
+        );
+
+    // dont include urls with params
+    if (url.search.length !== 0) {
+      return true;
+    }
+
+    if (isAbsolute) {
+      // don't include some regexed hrefs
+      if (!_.EXCLUDED_REGEX.some((re) => re.test(url.host))) {
+        urlsToVisit.push(url);
+      }
+    } else {
       urlsToVisit.push(url);
     }
   });
