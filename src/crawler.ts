@@ -1,11 +1,12 @@
+import * as fs from "fs";
 import * as _ from "./index";
 import * as T from "./types";
-import * as fs from "fs";
 import * as request from "request";
 import * as cheerio from "cheerio";
 import * as normalizeUrl from "normalize-url";
+import * as writer from "./writer";
 
-let level = 0;
+// let level = 0;
 let crawledPages: T.CrawledPageData[] = [];
 let urlsToVisit: URL[] = [];
 let emailsFound: T.Email[] = [];
@@ -20,6 +21,7 @@ crawl();
 
 function crawl() {
   if (pagesVisited >= _.MAX_PAGES_TO_VISIT) {
+    console.log();
     console.log(`Reached max limit of number of pages to visit.`);
     endReport();
     return;
@@ -61,8 +63,11 @@ function visitPage(url: URL, callback: Function) {
       return;
     }
 
-    crawledPages.push({ url: url, status: res.statusCode });
-    fs.appendFileSync(_.PATH_PAGES_DB, `${url},${res.statusCode}\n`);
+    const pageData: T.CrawledPageData = { url: url, status: res.statusCode };
+    crawledPages.push(pageData);
+    writer.add(pageData);
+    // fs.appendFileSync(_.PATH_PAGES_DB, `${url},${res.statusCode}\n`);
+
     pagesVisited++;
 
     const $ = cheerio.load(body);
@@ -102,7 +107,7 @@ function collectLinks($: CheerioStatic) {
         emailsFound.push({
           address,
         });
-        fs.appendFileSync(_.PATH_EMAILS_DB, `${address}\n`);
+        // fs.appendFileSync(_.PATH_EMAILS_DB, `${address}\n`);
       }
       return true;
     }
