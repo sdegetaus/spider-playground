@@ -1,17 +1,13 @@
-import * as fs from "fs";
+import * as del from "del";
 
 const dir = "./public";
-
-try {
-  if (fs.existsSync(`${dir}`)) {
-    fs.rmdirSync(`${dir}`, { recursive: true });
+(async () => {
+  try {
+    await del(dir);
     console.log(`Removed "${dir}"`);
-  } else {
-    console.log(`Couldn't find path "${dir}"`);
+  } catch (error) {
+    console.error(`Error while deleting path "${dir}". More info below.`);
+  } finally {
+    console.log();
   }
-} catch (error) {
-  console.error(`Error while deleting path "${dir}". More info below.`);
-  throw new Error(error);
-} finally {
-  console.log();
-}
+})();

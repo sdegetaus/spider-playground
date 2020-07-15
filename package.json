@@ -2,13 +2,12 @@
   "name": "spider-playground",
   "version": "0.0.1",
   "description": "",
-  "main": "crawler.js",
   "scripts": {
     "start": "ts-node ./src/index.ts",
     "clean": "ts-node ./scripts/clean.ts"
   },
   "keywords": [],
-  "author": "",
+  "author": "Santiago Degetau",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
@@ -21,6 +20,7 @@
     "@types/node": "^14.0.23",
     "@types/request": "^2.48.5",
     "@types/request-promise": "^4.1.46",
+    "del": "^5.1.0",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.6"
   }
