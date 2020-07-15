@@ -1,7 +1,6 @@
 // http://www.netinstructions.com/how-to-make-a-simple-web-crawler-in-javascript-and-node-js/
 
 import * as fs from "fs";
-console.time();
 
 export const START_URL = new URL("https://taus.mx");
 export const MAX_PAGES_TO_VISIT = 10;
