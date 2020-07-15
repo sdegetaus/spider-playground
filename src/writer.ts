@@ -7,7 +7,8 @@ let queue: T.CrawledData[] = [];
 export function add(pageData: T.CrawledData) {
   queue.push(pageData);
   const pd = queue.shift();
-  fs.appendFile(_.PATH_PAGES_DB, `${pd.url},${pd.status}\n`, (error) => {
-    if (error) throw error;
-  });
+  // fs.appendFile(_.PATH_PAGES_DB, `${pd.url},${pd.status}\n`, (error) => {
+  //   if (error) throw error;
+  // });
+  fs.appendFileSync(_.PATH_PAGES_DB, `${pd.url},${pd.status}\n`);
 }

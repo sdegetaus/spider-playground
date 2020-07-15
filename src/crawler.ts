@@ -6,10 +6,8 @@ import * as cheerio from "cheerio";
 import * as normalizeUrl from "normalize-url";
 import * as writer from "./writer";
 
-// let depth = 0;
 let crawledPages: T.CrawledData[] = [];
 let pagesVisited = 0;
-// let currentUrl: URL = null;
 
 const head: T.Vertex = {
   url: _.START_URL,
@@ -63,10 +61,10 @@ fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
         writer.add(pageData);
         collectLinks(cheerio.load(body));
 
-        while (head.edges.length > 0) {
-          const next = head.edges.shift();
-          // console.log(next.url.toString());
-        }
+        // while (head.edges.length > 0) {
+        //   const next = head.edges.shift();
+        //   // console.log(next.url.toString());
+        // }
         console.log(head);
         process.exit(0);
       })

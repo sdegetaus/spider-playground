@@ -3,10 +3,6 @@ export interface CrawledData {
   status: number;
 }
 
-export interface Email {
-  address: string;
-}
-
 export interface Vertex {
   url: URL;
   edges: Vertex[];
