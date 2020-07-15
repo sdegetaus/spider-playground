@@ -8,7 +8,7 @@ import * as writer from "./writer";
 
 // let level = 0;
 let crawledPages: T.CrawledPageData[] = [];
-let urlsToVisit: URL[] = [];
+let urlsToVisit: T.Node[] = [];
 let emailsFound: T.Email[] = [];
 let pagesVisited = 0;
 let currentUrl: URL = null;
@@ -18,7 +18,8 @@ fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
 
 (async () => {
   console.time();
-  urlsToVisit.push(_.START_URL);
+  urlsToVisit.push({ url: _.START_URL, others: [] });
+  urlsToVisit.push({ url: _.START_URL, others: [] });
 
   while (urlsToVisit.length > 0) {
     if (pagesVisited >= _.MAX_PAGES_TO_VISIT) {
@@ -26,19 +27,19 @@ fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
       console.log(`Reached max limit of number of pages to visit.`);
       break;
     }
-    const nextUrl = urlsToVisit.shift();
-    currentUrl = nextUrl;
+    const next = urlsToVisit.shift();
+    currentUrl = next.url;
 
     // reached end of links
-    if (nextUrl === undefined) {
+    if (next === undefined) {
       break;
     }
 
     console.log();
-    console.log(`Visiting page ${nextUrl}`);
+    console.log(`Visiting page ${next.url}`);
 
     const options = {
-      uri: nextUrl.toString(),
+      uri: next.url.toString(),
       resolveWithFullResponse: true,
       transform2xxOnly: true,
     };
@@ -46,7 +47,7 @@ fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
     await rp(options)
       .then(({ body, statusCode }) => {
         const pageData = {
-          url: nextUrl,
+          url: next.url,
           status: statusCode,
         };
         pagesVisited++;
@@ -99,14 +100,18 @@ function collectLinks($: CheerioStatic) {
     //   }
     //   return true;
     // }
+    console.log(JSON.stringify(urlsToVisit, null, 2));
 
     if (isAbsolute) {
       // don't include some regexed hrefs
       if (!_.EXCLUDED_REGEX.some((re) => re.test(url.host))) {
-        urlsToVisit.push(url);
+        // urlsToVisit.push({ url });
+        urlsToVisit[urlsToVisit.length - 1].others.push({ url });
       }
     } else {
-      urlsToVisit.push(url);
+      // urlsToVisit.push({ url });
+      urlsToVisit[urlsToVisit.length - 1].others.push({ url });
     }
+    console.log(urlsToVisit);
   });
 }

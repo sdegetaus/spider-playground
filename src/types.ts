@@ -6,3 +6,8 @@ export interface CrawledPageData {
 export interface Email {
   address: string;
 }
+
+export interface Node {
+  url: URL;
+  others?: Node[];
+}
