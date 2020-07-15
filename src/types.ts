@@ -1,4 +1,4 @@
-export interface CrawledPageData {
+export interface CrawledData {
   url: URL;
   status: number;
 }
@@ -7,7 +7,7 @@ export interface Email {
   address: string;
 }
 
-export interface Node {
+export interface Vertex {
   url: URL;
-  others?: Node[];
+  edges: Vertex[];
 }
