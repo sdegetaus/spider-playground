@@ -9,18 +9,32 @@ import * as writer from "./writer";
 let crawledPages: T.CrawledData[] = [];
 let pagesVisited = 0;
 
-const head: T.Vertex = {
-  url: _.START_URL,
-  edges: [],
-};
+const runFor = 2;
+
+const head: T.Vertex[] = [
+  {
+    url: _.START_URL,
+    edges: [],
+  },
+];
+
+let curr: T.Vertex;
 
 // append csv headers
-fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
+// temp
+// fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
 
 (async () => {
   console.time();
+  let i = 0;
 
   while (true) {
+    if (i >= runFor) {
+      console.log();
+      console.log(`Reached max limit of iterations.`);
+      break;
+    }
+
     if (pagesVisited >= _.MAX_PAGES_TO_VISIT) {
       console.log();
       console.log(`Reached max limit of number of pages to visit.`);
@@ -35,42 +49,49 @@ fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
     // }
 
     // currentUrl = next.url;
+    curr = head[0];
 
     // dont visit if already visited
-    // if (crawledPages.some((e) => e.url.pathname === head.url.pathname)) {
-    //   continue;
-    // }
+    if (crawledPages.some((e) => e.url.href === curr.url.href)) {
+      continue;
+    }
 
     console.log();
-    console.log(`Visiting page ${head.url}`);
+    console.log(`Visiting page ${curr.url}`);
 
     const options = {
-      uri: head.url.toString(),
+      uri: curr.url.toString(),
       resolveWithFullResponse: true,
     };
 
     await rp(options)
       .then(({ body, statusCode }) => {
         const pageData = {
-          url: head.url,
+          url: curr.url,
           status: statusCode,
         };
 
         pagesVisited++;
         crawledPages.push(pageData);
-        writer.add(pageData);
+        // writer.add(pageData);
         collectLinks(cheerio.load(body));
 
-        // while (head.edges.length > 0) {
-        //   const next = head.edges.shift();
-        //   // console.log(next.url.toString());
-        // }
-        console.log(head);
-        process.exit(0);
+        if (i == 1) {
+          writer.test(head);
+          process.exit(0);
+        }
+
+        while (curr.edges.length > 0) {
+          head.push(curr.edges.shift());
+        }
+        head.shift();
+        writer.test(head);
+        // process.exit(0);
       })
       .catch((error) => {
         console.log(`Error reported: ${error}`);
       });
+    i++;
   }
 
   console.log();
@@ -93,7 +114,7 @@ function collectLinks($: CheerioStatic) {
     const url = isAbsolute
       ? new URL(normalizeUrl(`${href}`))
       : new URL(
-          normalizeUrl(`${head.url.protocol}//${head.url.hostname}${href}`)
+          normalizeUrl(`${curr.url.protocol}//${curr.url.hostname}${href}`)
         );
 
     // dont include urls with params
@@ -101,15 +122,23 @@ function collectLinks($: CheerioStatic) {
       return true;
     }
 
-    console.log("-- " + url.toString());
+    // todo: better solution?
+    if (url.href === _.START_URL.href) {
+      return true;
+    }
+
+    // todo: necessary?
+    if (crawledPages.some((_) => _.url.href === url.href)) {
+      return true;
+    }
 
     if (isAbsolute) {
       // don't include some regexed hrefs
       if (!_.EXCLUDED_REGEX.some((re) => re.test(url.host))) {
-        head.edges.push({ url, edges: [] });
+        curr.edges.push({ url, edges: [] });
       }
     } else {
-      head.edges.push({ url, edges: [] });
+      curr.edges.push({ url, edges: [] });
     }
   });
 }

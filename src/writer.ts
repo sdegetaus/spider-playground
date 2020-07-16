@@ -12,3 +12,8 @@ export function add(pageData: T.CrawledData) {
   // });
   fs.appendFileSync(_.PATH_PAGES_DB, `${pd.url},${pd.status}\n`);
 }
+
+// temp
+export function test(a: any) {
+  fs.writeFileSync("./public/test.json", `${JSON.stringify(a, null, 2)}`);
+}

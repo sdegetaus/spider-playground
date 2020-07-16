@@ -25,8 +25,9 @@ const FILE_PAGES_DB = `output-${fs
 
 export const PATH_PAGES_DB = `${DIR_OUTPUT_DB}/${FILE_PAGES_DB}`;
 
-if (fs.existsSync(PATH_PAGES_DB)) {
-  fs.unlinkSync(PATH_PAGES_DB);
-}
+// temp
+// if (fs.existsSync(PATH_PAGES_DB)) {
+//   fs.unlinkSync(PATH_PAGES_DB);
+// }
 
 require("./crawler");
