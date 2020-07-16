@@ -3,7 +3,7 @@
 import * as fs from "fs";
 
 export const START_URL = new URL("https://taus.mx");
-export const MAX_PAGES_TO_VISIT = 10;
+export const MAX_PAGES_TO_VISIT = 2;
 export const EXCLUDED_REGEX: RegExp[] = [
   // exclude github repo paths
   /github.com\/.+?\/.+?\/(issues|pulls|actions|projects|security|pulse|find|commits|branches|tags|tree|blob|releases|graphs|search)/,

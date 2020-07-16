@@ -1,6 +1,6 @@
 export interface CrawledData {
   url: URL;
-  status: number;
+  statusCode: number;
 }
 
 export interface Vertex {
