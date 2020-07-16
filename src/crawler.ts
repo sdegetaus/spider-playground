@@ -13,7 +13,7 @@ let allCrawledPages: T.CrawledData[] = [];
 fs.appendFileSync(_.PATH_PAGES_DB, `depth,url,status\n`);
 
 (async () => {
-  console.time();
+  let hrstart = process.hrtime();
 
   const origin: T.Vertex = {
     url: _.START_URL,
@@ -28,11 +28,13 @@ fs.appendFileSync(_.PATH_PAGES_DB, `depth,url,status\n`);
     next.edges = await visit(next.url, 1);
   }
 
-  writer.test(origin);
+  writer.saveTree(origin);
 
   console.log();
   console.log(`Pages visited ${pagesVisited}`);
-  console.timeEnd();
+
+  let hrend = process.hrtime(hrstart);
+  console.info("Execution time: %ds %dms", hrend[0], hrend[1] / 1000000);
 })();
 
 async function visit(url: URL, depth: number) {
