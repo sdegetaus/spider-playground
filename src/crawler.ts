@@ -6,11 +6,11 @@ import * as cheerio from "cheerio";
 import * as normalizeUrl from "normalize-url";
 import * as writer from "./writer";
 
-let crawledPages: T.CrawledData[] = [];
 let pagesVisited = 0;
+let allCrawledPages: T.CrawledData[] = [];
 
 // append csv headers
-// fs.appendFileSync(_.PATH_PAGES_DB, `url,status\n`);
+fs.appendFileSync(_.PATH_PAGES_DB, `depth,url,status\n`);
 
 (async () => {
   console.time();
@@ -20,21 +20,12 @@ let pagesVisited = 0;
     edges: [],
   };
 
-  origin.edges = await visit(origin.url);
+  origin.edges = await visit(origin.url, 0);
 
   for (let i = 0; i < origin.edges.length; i++) {
-    if (pagesVisited >= _.MAX_PAGES_TO_VISIT) {
-      console.log();
-      console.log(`Reached max limit of number of pages to visit.`);
-      break;
-    }
     const next = origin.edges[i];
-
-    // dont visit if already visited
-    if (crawledPages.some((e) => e.url.href === next.url.href)) {
-      continue;
-    }
-    next.edges = await visit(next.url);
+    if (allCrawledPages.some((_) => _.url.href === next.url.href)) continue; // dont visit if already visited
+    next.edges = await visit(next.url, 1);
   }
 
   writer.test(origin);
@@ -44,24 +35,26 @@ let pagesVisited = 0;
   console.timeEnd();
 })();
 
-async function visit(fromUrl: URL) {
+async function visit(url: URL, depth: number) {
   console.log();
-  console.log(`[${pagesVisited}]: Visiting page ${fromUrl}`);
+  console.log(`[${pagesVisited}]: Visiting page ${url}`);
 
   const options = {
-    uri: fromUrl.toString(),
+    uri: url.toString(),
     resolveWithFullResponse: true,
   };
 
   return await request(options)
     .then(({ body, statusCode }): T.Vertex[] => {
       const pageData: T.CrawledData = {
-        url: fromUrl,
+        depth,
+        url,
         statusCode,
       };
       pagesVisited++;
-      crawledPages.push(pageData);
-      return collectLinks(fromUrl, cheerio.load(body));
+      writer.add(pageData);
+      allCrawledPages.push(pageData);
+      return collectLinks(url, cheerio.load(body));
     })
     .catch((error) => {
       throw error;
@@ -77,9 +70,7 @@ function collectLinks(fromUrl: URL, $: CheerioStatic): T.Vertex[] {
     const isAbsolute = new RegExp("^(?:[a-z]+:)?//", "i").test(href);
 
     // dont include hrefs with 'tel:', 'javascript:', etc.
-    if (_.INVALID_HREFS.some((invalid) => href.includes(invalid))) {
-      return true;
-    }
+    if (_.INVALID_HREFS.some((invalid) => href.includes(invalid))) return true;
 
     const url = isAbsolute
       ? new URL(normalizeUrl(`${href}`))
@@ -88,21 +79,16 @@ function collectLinks(fromUrl: URL, $: CheerioStatic): T.Vertex[] {
         );
 
     // dont include urls with params
-    if (url.search.length !== 0) {
-      return true;
-    }
+    if (url.search.length !== 0) return true;
 
-    // todo: better solution?
-    if (url.href === _.START_URL.href) {
-      return true;
-    }
+    // dont include urls to this same page
+    if (url.href === fromUrl.href) return true;
 
-    // todo: necessary?
-    if (crawledPages.some((_) => _.url.href === url.href)) return true;
+    // dont include duplicate link in the same page
     if (collected.some((_) => _.url.href === url.href)) return true;
 
     if (isAbsolute) {
-      // don't include some regexed hrefs
+      // dont include some regexed hrefs
       if (!_.EXCLUDED_REGEX.some((re) => re.test(url.host))) {
         collected.push({ url, edges: [] });
       }

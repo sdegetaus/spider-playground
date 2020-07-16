@@ -10,10 +10,13 @@ export function add(pageData: T.CrawledData) {
   // fs.appendFile(_.PATH_PAGES_DB, `${pd.url},${pd.status}\n`, (error) => {
   //   if (error) throw error;
   // });
-  fs.appendFileSync(_.PATH_PAGES_DB, `${pd.url},${pd.statusCode}\n`);
+  fs.appendFileSync(
+    _.PATH_PAGES_DB,
+    `${pd.depth},${pd.url},${pd.statusCode}\n`
+  );
 }
 
 // temp
 export function test(a: any) {
-  fs.writeFileSync("./public/test.json", `${JSON.stringify(a, null, 2)}`);
+  fs.writeFileSync("./public/test.json", `${JSON.stringify(a, null, 1)}`);
 }

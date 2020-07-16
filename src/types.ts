@@ -1,4 +1,5 @@
 export interface CrawledData {
+  depth: number;
   url: URL;
   statusCode: number;
 }

@@ -1,3 +1,4 @@
+// I started following this tutorial:
 // http://www.netinstructions.com/how-to-make-a-simple-web-crawler-in-javascript-and-node-js/
 
 import * as fs from "fs";
@@ -25,9 +26,8 @@ const FILE_PAGES_DB = `output-${fs
 
 export const PATH_PAGES_DB = `${DIR_OUTPUT_DB}/${FILE_PAGES_DB}`;
 
-// temp
-// if (fs.existsSync(PATH_PAGES_DB)) {
-//   fs.unlinkSync(PATH_PAGES_DB);
-// }
+if (fs.existsSync(PATH_PAGES_DB)) {
+  fs.unlinkSync(PATH_PAGES_DB);
+}
 
 require("./crawler");
